@@ -2,6 +2,7 @@ package com.gentle.springsecuritypractice.common.security.jwt;
 
 import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
+import com.gentle.springsecuritypractice.user.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -48,21 +49,31 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String generateRefreshToken(String subject, List<String> roles) {
+    public String generateRefreshToken(String subject) {
         return Jwts.builder()
                 .setSubject(subject)
-                .claim("roles", roles)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationTime))
                 .signWith(secretKey, SignatureAlgorithm.HS512)
                 .compact();
     }
 
-    public JwtToken refreshAccessToken(String refreshToken) {
+    public JwtToken createAuthTokens(User user) {
+        if (user.getUserId() != null) {
+            String subject = String.valueOf(user.getUserId());
+            List<String> roles = getRoles(user);
+            String accessToken = generateAccessToken(subject, roles);
+            String refreshToken = generateRefreshToken(subject);
+
+            return new JwtToken(accessToken, refreshToken);
+        } else throw new CommonException(ErrorCode.INVALID_PARAMETER);
+    }
+
+    public JwtToken reissueAccessToken(User user, String refreshToken) {
         JwtTokenValidator.validate(refreshToken, secretKey);
 
         String subject = getSubject(refreshToken);
-        List<String> roles = getRoles(refreshToken);
+        List<String> roles = getRoles(user);
 
         String newAccessToken = generateAccessToken(subject, roles);
 
@@ -109,6 +120,13 @@ public class JwtTokenProvider {
         }
 
         return roles;
+    }
+
+    public List<String> getRoles(User user) {
+        return Arrays.stream(user.getUserRole().split(","))
+                .map(String::trim)
+                .map(x -> "ROLE_" + x)
+                .toList();
     }
 
 }

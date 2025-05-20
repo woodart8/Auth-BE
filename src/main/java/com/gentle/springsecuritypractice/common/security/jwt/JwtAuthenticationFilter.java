@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 @Slf4j
 @Component
@@ -42,6 +43,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.setStatus(ex.getCode());
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");  // 응답 인코딩을 UTF-8로 설정
+
+                // JSON 응답 작성
+                String jsonResponse = String.format(
+                        "{\"code\":%d,\"error\":\"%s\",\"message\":\"%s\"}",
+                        ex.getCode(),
+                        ex.getError(),
+                        ex.getMessage()
+                );
+
+                PrintWriter writer = response.getWriter();
+                writer.write(jsonResponse);
+                writer.flush();
                 return;
             }
         }

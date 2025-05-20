@@ -10,11 +10,13 @@ import com.gentle.springsecuritypractice.user.aggregate.UserStatus;
 import com.gentle.springsecuritypractice.user.dto.LoginRequestDTO;
 import com.gentle.springsecuritypractice.user.dto.LoginResponseDTO;
 import com.gentle.springsecuritypractice.user.dto.SignUpRequestDTO;
+import com.gentle.springsecuritypractice.user.dto.TokenResponseDTO;
 import com.gentle.springsecuritypractice.user.entity.User;
 import com.gentle.springsecuritypractice.user.repository.UserRepository;
 import com.gentle.springsecuritypractice.user.validator.LoginValidator;
 import com.gentle.springsecuritypractice.user.validator.SignUpValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -72,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
             throw new CommonException(ErrorCode.INVALID_PASSWORD);
         }
 
-        JwtToken jwtToken = createAuthTokens(user);
+        JwtToken jwtToken = jwtTokenProvider.createAuthTokens(user);
 
         return LoginResponseDTO.builder()
                 .userId(user.getUserId())
@@ -80,18 +82,23 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    private JwtToken createAuthTokens(User user) {
-        if (user.getUserId() != null) {
-            String subject = String.valueOf(user.getUserId());
-            List<String> roles = Arrays
-                    .stream(user.getUserRole().split(","))
-                    .map(String::trim)
-                    .map(x -> "ROLE_" + x).toList();
-            String accessToken = jwtTokenProvider.generateAccessToken(subject, roles);
-            String refreshToken = jwtTokenProvider.generateRefreshToken(subject, roles);
+    @Override
+    public TokenResponseDTO reissue(String refreshToken) {
+        String subject = jwtTokenProvider.getSubject(refreshToken);
 
-            return new JwtToken(accessToken, refreshToken);
-        } else throw new CommonException(ErrorCode.INVALID_PARAMETER);
+        User user;
+        try {
+            user = userRepository.findById(Long.parseLong(subject))
+                    .orElseThrow(() -> new CommonException(ErrorCode.INVALID_TOKEN));
+        } catch (NumberFormatException e) {
+            throw new CommonException(ErrorCode.INVALID_TOKEN);
+        }
+
+        JwtToken jwtToken = jwtTokenProvider.reissueAccessToken(user, refreshToken);
+        return TokenResponseDTO.builder()
+                .token(jwtToken)
+                .build();
+
     }
 
 }

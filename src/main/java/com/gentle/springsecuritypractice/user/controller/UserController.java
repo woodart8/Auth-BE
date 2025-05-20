@@ -1,9 +1,6 @@
 package com.gentle.springsecuritypractice.user.controller;
 
-import com.gentle.springsecuritypractice.user.dto.LoginRequestDTO;
-import com.gentle.springsecuritypractice.user.dto.LoginResponseDTO;
-import com.gentle.springsecuritypractice.user.dto.SignUpRequestDTO;
-import com.gentle.springsecuritypractice.user.dto.UserResponseDTO;
+import com.gentle.springsecuritypractice.user.dto.*;
 import com.gentle.springsecuritypractice.user.service.AuthService;
 import com.gentle.springsecuritypractice.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +33,13 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO req) {
         LoginResponseDTO loginResponse = authService.login(req);
         return ResponseEntity.ok(loginResponse);
+    }
+
+    // 엑세스 토큰 갱신
+    @PostMapping("/reissue")
+    public ResponseEntity<?> reissueToken(@RequestHeader("Refresh-Token") String refreshToken) {
+        TokenResponseDTO tokenResponse = authService.reissue(refreshToken);
+        return ResponseEntity.ok(tokenResponse);
     }
 
     @GetMapping("/{id}")
