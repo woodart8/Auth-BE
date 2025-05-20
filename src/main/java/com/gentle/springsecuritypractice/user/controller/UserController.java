@@ -1,0 +1,47 @@
+package com.gentle.springsecuritypractice.user.controller;
+
+import com.gentle.springsecuritypractice.user.dto.LoginRequestDTO;
+import com.gentle.springsecuritypractice.user.dto.LoginResponseDTO;
+import com.gentle.springsecuritypractice.user.dto.SignUpRequestDTO;
+import com.gentle.springsecuritypractice.user.dto.UserResponseDTO;
+import com.gentle.springsecuritypractice.user.service.AuthService;
+import com.gentle.springsecuritypractice.user.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    private final UserService userService;
+    private final AuthService authService;
+
+    @Autowired
+    public UserController(UserService userService, AuthService authService) {
+        this.userService = userService;
+        this.authService = authService;
+    }
+
+    // 회원가입
+    @PostMapping("signup")
+    public ResponseEntity<?> signUp(@RequestBody SignUpRequestDTO req) {
+        Long userId = authService.signUp(req);
+        return ResponseEntity.ok(userId);
+    }
+
+    // 로그인
+    @PostMapping("login")
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO req) {
+        LoginResponseDTO loginResponse = authService.login(req);
+        return ResponseEntity.ok(loginResponse);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable(name = "id") Long id) {
+        UserResponseDTO userResponse = userService.loadUserById(id);
+        return ResponseEntity.ok(userResponse);
+    }
+
+}
