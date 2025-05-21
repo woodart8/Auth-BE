@@ -70,8 +70,6 @@ public class JwtTokenProvider {
     }
 
     public JwtToken reissueAccessToken(User user, String refreshToken) {
-        JwtTokenValidator.validate(refreshToken, secretKey);
-
         String subject = getSubject(refreshToken);
         List<String> roles = getRoles(user);
 
@@ -127,6 +125,10 @@ public class JwtTokenProvider {
                 .map(String::trim)
                 .map(x -> "ROLE_" + x)
                 .toList();
+    }
+
+    public void validateToken(String token) {
+        JwtTokenValidator.validate(token, secretKey);
     }
 
 }

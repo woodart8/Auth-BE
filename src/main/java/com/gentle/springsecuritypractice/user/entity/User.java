@@ -1,7 +1,6 @@
 package com.gentle.springsecuritypractice.user.entity;
 
 import com.gentle.springsecuritypractice.user.aggregate.SignUpPath;
-import com.gentle.springsecuritypractice.user.aggregate.UserRole;
 import com.gentle.springsecuritypractice.user.aggregate.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;

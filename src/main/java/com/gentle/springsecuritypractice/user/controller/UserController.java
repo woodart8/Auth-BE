@@ -35,6 +35,14 @@ public class UserController {
         return ResponseEntity.ok(loginResponse);
     }
 
+    // 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String accessToken) {
+        String token = accessToken.replace("Bearer ", "");
+        authService.logout(token);
+        return ResponseEntity.ok("로그아웃 성공");
+    }
+
     // 엑세스 토큰 갱신
     @PostMapping("/reissue")
     public ResponseEntity<?> reissueToken(@RequestHeader("Refresh-Token") String refreshToken) {

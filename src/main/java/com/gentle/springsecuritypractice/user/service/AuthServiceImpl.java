@@ -4,6 +4,7 @@ import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
 import com.gentle.springsecuritypractice.common.security.jwt.JwtToken;
 import com.gentle.springsecuritypractice.common.security.jwt.JwtTokenProvider;
+import com.gentle.springsecuritypractice.redis.RedisService;
 import com.gentle.springsecuritypractice.user.aggregate.SignUpPath;
 import com.gentle.springsecuritypractice.user.aggregate.UserRole;
 import com.gentle.springsecuritypractice.user.aggregate.UserStatus;
@@ -16,13 +17,10 @@ import com.gentle.springsecuritypractice.user.repository.UserRepository;
 import com.gentle.springsecuritypractice.user.validator.LoginValidator;
 import com.gentle.springsecuritypractice.user.validator.SignUpValidator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -30,14 +28,17 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RedisService redisService;
 
     @Autowired
     public AuthServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
-                           JwtTokenProvider jwtTokenProvider) {
+                           JwtTokenProvider jwtTokenProvider,
+                           RedisService redisService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.redisService = redisService;
     }
 
     @Override
@@ -75,6 +76,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         JwtToken jwtToken = jwtTokenProvider.createAuthTokens(user);
+        redisService.setValue("refresh:" + user.getUserId(), jwtToken.getRefreshToken());
 
         return LoginResponseDTO.builder()
                 .userId(user.getUserId())
@@ -82,23 +84,38 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    public void logout(String accessToken) {
+        jwtTokenProvider.validateToken(accessToken);
+        String userId = jwtTokenProvider.getSubject(accessToken);
+        redisService.deleteValue("refresh:" + userId);
+    }
+
     @Override
     public TokenResponseDTO reissue(String refreshToken) {
+        jwtTokenProvider.validateToken(refreshToken);
         String subject = jwtTokenProvider.getSubject(refreshToken);
 
         User user;
         try {
             user = userRepository.findById(Long.parseLong(subject))
-                    .orElseThrow(() -> new CommonException(ErrorCode.INVALID_TOKEN));
+                    .orElse(null);
         } catch (NumberFormatException e) {
             throw new CommonException(ErrorCode.INVALID_TOKEN);
         }
 
-        JwtToken jwtToken = jwtTokenProvider.reissueAccessToken(user, refreshToken);
-        return TokenResponseDTO.builder()
-                .token(jwtToken)
-                .build();
+        if (user == null) {
+            throw new CommonException(ErrorCode.INVALID_TOKEN);
+        }
 
+        String storedToken = redisService.getValue("refresh:" + user.getUserId());
+        if (refreshToken.equals(storedToken)) {
+            JwtToken jwtToken = jwtTokenProvider.reissueAccessToken(user, refreshToken);
+            return TokenResponseDTO.builder()
+                    .token(jwtToken)
+                    .build();
+        } else {
+            throw new CommonException(ErrorCode.INVALID_TOKEN);
+        }
     }
 
 }
