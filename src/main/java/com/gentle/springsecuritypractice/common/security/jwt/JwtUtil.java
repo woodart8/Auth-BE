@@ -21,13 +21,13 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 @Component
-public class JwtTokenProvider {
+public class JwtUtil {
 
     private final Key secretKey;
     private final long accessExpirationTime;
     private final long refreshExpirationTime;
 
-    public JwtTokenProvider(JwtProperties jwtProperties) {
+    public JwtUtil(JwtProperties jwtProperties) {
         byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecret());
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
         this.accessExpirationTime = jwtProperties.getAccessExpirationTime();

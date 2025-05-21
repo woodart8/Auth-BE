@@ -15,7 +15,8 @@ public enum ErrorCode {
     INVALID_EMAIL(400, "INVALID_EMAIL","유효하지 않은 이메일입니다."),
     INVALID_SIGNUP_PATH(400, "INVALID_SIGNUP_PATH","유효하지 않은 회원가입 경로입니다."),
     INVALID_PARAMETER(400, "INVALID_PARAMETER","유효하지 않은 요청 인자입니다."),
-    NOT_FOUND_USER(404, "NOT_FOUND_USER","해당 회원을 찾을 수 없습니다.");
+    NOT_FOUND_USER(404, "NOT_FOUND_USER","해당 회원을 찾을 수 없습니다."),
+    PARSE_JSON_FAILED(500, "PARSE_JSON_FAILED", "JSON 파싱 중 에러가 발생했습니다.");
 
     private final int code;
     private final String error;

@@ -2,17 +2,17 @@ package com.gentle.springsecuritypractice.redis;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
-@Service
-public class RedisServiceImpl implements RedisService {
+@Component
+public class RedisUtil {
 
     private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
-    public RedisServiceImpl(RedisTemplate<String, String> redisTemplate) {
+    public RedisUtil(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 

@@ -1,7 +1,6 @@
 package com.gentle.springsecuritypractice.common.config;
 
 import com.gentle.springsecuritypractice.common.security.jwt.JwtAuthenticationFilter;
-import com.gentle.springsecuritypractice.common.security.jwt.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,9 +35,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/signup").permitAll()
-                        .requestMatchers("/api/users/login").permitAll()
-                        .requestMatchers("/api/users/reissue").permitAll()
+                        .requestMatchers("/api/auth/signup").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/login/kakao").permitAll()
+                        .requestMatchers("/api/auth/logout").permitAll()
+                        .requestMatchers("/api/auth/reissue").permitAll()
                         .requestMatchers("/api/users/**").hasRole("ENTERPRISE")
                         .anyRequest().authenticated()
                 )

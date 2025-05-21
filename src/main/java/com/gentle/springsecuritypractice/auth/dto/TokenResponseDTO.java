@@ -1,4 +1,4 @@
-package com.gentle.springsecuritypractice.user.dto;
+package com.gentle.springsecuritypractice.auth.dto;
 
 import com.gentle.springsecuritypractice.common.security.jwt.JwtToken;
 import lombok.Builder;

@@ -1,22 +1,20 @@
-package com.gentle.springsecuritypractice.user.service;
+package com.gentle.springsecuritypractice.auth.service;
 
+import com.gentle.springsecuritypractice.auth.dto.*;
+import com.gentle.springsecuritypractice.auth.utility.KakaoUtil;
 import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
 import com.gentle.springsecuritypractice.common.security.jwt.JwtProperties;
 import com.gentle.springsecuritypractice.common.security.jwt.JwtToken;
-import com.gentle.springsecuritypractice.common.security.jwt.JwtTokenProvider;
-import com.gentle.springsecuritypractice.redis.RedisService;
+import com.gentle.springsecuritypractice.common.security.jwt.JwtUtil;
+import com.gentle.springsecuritypractice.redis.RedisUtil;
 import com.gentle.springsecuritypractice.user.aggregate.SignUpPath;
 import com.gentle.springsecuritypractice.user.aggregate.UserRole;
 import com.gentle.springsecuritypractice.user.aggregate.UserStatus;
-import com.gentle.springsecuritypractice.user.dto.LoginRequestDTO;
-import com.gentle.springsecuritypractice.user.dto.LoginResponseDTO;
-import com.gentle.springsecuritypractice.user.dto.SignUpRequestDTO;
-import com.gentle.springsecuritypractice.user.dto.TokenResponseDTO;
 import com.gentle.springsecuritypractice.user.entity.User;
 import com.gentle.springsecuritypractice.user.repository.UserRepository;
-import com.gentle.springsecuritypractice.user.validator.LoginValidator;
-import com.gentle.springsecuritypractice.user.validator.SignUpValidator;
+import com.gentle.springsecuritypractice.auth.validator.LoginValidator;
+import com.gentle.springsecuritypractice.auth.validator.SignUpValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,21 +27,24 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtUtil jwtUtil;
     private final JwtProperties jwtProperties;
-    private final RedisService redisService;
+    private final RedisUtil redisUtil;
+    private final KakaoUtil kakaoUtil;
 
     @Autowired
     public AuthServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
-                           JwtTokenProvider jwtTokenProvider,
+                           JwtUtil jwtUtil,
                            JwtProperties jwtProperties,
-                           RedisService redisService) {
+                           RedisUtil redisUtil,
+                           KakaoUtil kakaoUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtUtil = jwtUtil;
         this.jwtProperties = jwtProperties;
-        this.redisService = redisService;
+        this.redisUtil = redisUtil;
+        this.kakaoUtil = kakaoUtil;
     }
 
     @Override
@@ -80,8 +81,8 @@ public class AuthServiceImpl implements AuthService {
             throw new CommonException(ErrorCode.INVALID_PASSWORD);
         }
 
-        JwtToken jwtToken = jwtTokenProvider.createAuthTokens(user);
-        redisService.setValue(
+        JwtToken jwtToken = jwtUtil.createAuthTokens(user);
+        redisUtil.setValue(
                 "refresh:" + user.getUserId(),
                 jwtToken.getRefreshToken(),
                 jwtProperties.getRefreshExpirationTime(),
@@ -94,16 +95,40 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
+    public LoginResponseDTO kakaoLogin(String accessCode) {
+        KakaoDTO.OAuthToken oAuthToken = kakaoUtil.requestToken(accessCode);
+        KakaoDTO.KakaoProfile kakaoProfile = kakaoUtil.requestProfile(oAuthToken);
+        String email = kakaoProfile.getKakaoAccount().getEmail();
+
+        User user = userRepository.findByEmailAndSignUpPath(email, SignUpPath.KAKAO)
+                .orElseGet(() -> createNewUser(kakaoProfile));
+
+        JwtToken jwtToken = jwtUtil.createAuthTokens(user);
+        redisUtil.setValue(
+                "refresh:" + user.getUserId(),
+                jwtToken.getRefreshToken(),
+                jwtProperties.getRefreshExpirationTime(),
+                TimeUnit.SECONDS
+        );
+
+        return LoginResponseDTO.builder()
+                .userId(user.getUserId())
+                .token(jwtToken)
+                .build();
+    }
+
+    @Override
     public void logout(String accessToken) {
-        jwtTokenProvider.validateToken(accessToken);
-        String userId = jwtTokenProvider.getSubject(accessToken);
-        redisService.deleteValue("refresh:" + userId);
+        jwtUtil.validateToken(accessToken);
+        String userId = jwtUtil.getSubject(accessToken);
+        redisUtil.deleteValue("refresh:" + userId);
     }
 
     @Override
     public TokenResponseDTO reissue(String refreshToken) {
-        jwtTokenProvider.validateToken(refreshToken);
-        String subject = jwtTokenProvider.getSubject(refreshToken);
+        jwtUtil.validateToken(refreshToken);
+        String subject = jwtUtil.getSubject(refreshToken);
 
         User user;
         try {
@@ -117,15 +142,27 @@ public class AuthServiceImpl implements AuthService {
             throw new CommonException(ErrorCode.INVALID_TOKEN);
         }
 
-        String storedToken = redisService.getValue("refresh:" + user.getUserId());
+        String storedToken = redisUtil.getValue("refresh:" + user.getUserId());
         if (refreshToken.equals(storedToken)) {
-            JwtToken jwtToken = jwtTokenProvider.reissueAccessToken(user, refreshToken);
+            JwtToken jwtToken = jwtUtil.reissueAccessToken(user, refreshToken);
             return TokenResponseDTO.builder()
                     .token(jwtToken)
                     .build();
         } else {
             throw new CommonException(ErrorCode.INVALID_TOKEN);
         }
+    }
+
+    private User createNewUser(KakaoDTO.KakaoProfile kakaoProfile) {
+        User newUser = User.builder()
+                .userName(kakaoProfile.getKakaoAccount().getProfile().getNickname())
+                .email(kakaoProfile.getKakaoAccount().getEmail())
+                .userStatus(UserStatus.ACTIVE)
+                .signUpPath(SignUpPath.KAKAO)
+                .createdAt(LocalDateTime.now().withNano(0))
+                .userRole(UserRole.ENTERPRISE.name())
+                .build();
+        return userRepository.save(newUser);
     }
 
 }
