@@ -2,6 +2,7 @@ package com.gentle.springsecuritypractice.user.service;
 
 import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
+import com.gentle.springsecuritypractice.common.security.jwt.JwtProperties;
 import com.gentle.springsecuritypractice.common.security.jwt.JwtToken;
 import com.gentle.springsecuritypractice.common.security.jwt.JwtTokenProvider;
 import com.gentle.springsecuritypractice.redis.RedisService;
@@ -21,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -28,16 +30,19 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProperties jwtProperties;
     private final RedisService redisService;
 
     @Autowired
     public AuthServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
                            JwtTokenProvider jwtTokenProvider,
+                           JwtProperties jwtProperties,
                            RedisService redisService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtProperties = jwtProperties;
         this.redisService = redisService;
     }
 
@@ -76,7 +81,12 @@ public class AuthServiceImpl implements AuthService {
         }
 
         JwtToken jwtToken = jwtTokenProvider.createAuthTokens(user);
-        redisService.setValue("refresh:" + user.getUserId(), jwtToken.getRefreshToken());
+        redisService.setValue(
+                "refresh:" + user.getUserId(),
+                jwtToken.getRefreshToken(),
+                jwtProperties.getRefreshExpirationTime(),
+                TimeUnit.SECONDS
+        );
 
         return LoginResponseDTO.builder()
                 .userId(user.getUserId())

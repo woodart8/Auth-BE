@@ -28,15 +28,11 @@ public class JwtTokenProvider {
     private final long accessExpirationTime;
     private final long refreshExpirationTime;
 
-    public JwtTokenProvider(
-            @Value("${token.secret}") String secretKey,
-            @Value("${token.access-expiration-time}") long accessExpirationTime,
-            @Value("${token.refresh-expiration-time}") long refreshExpirationTime
-    ) {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+    public JwtTokenProvider(JwtProperties jwtProperties) {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecret());
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
-        this.accessExpirationTime = accessExpirationTime;
-        this.refreshExpirationTime = refreshExpirationTime;
+        this.accessExpirationTime = jwtProperties.getAccessExpirationTime();
+        this.refreshExpirationTime = jwtProperties.getRefreshExpirationTime();
     }
 
     public String generateAccessToken(String subject, List<String> roles) {
@@ -44,7 +40,7 @@ public class JwtTokenProvider {
                 .setSubject(subject)
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + accessExpirationTime))
+                .setExpiration(new Date(System.currentTimeMillis() + accessExpirationTime * 1000L))
                 .signWith(secretKey, SignatureAlgorithm.HS512)
                 .compact();
     }
@@ -53,7 +49,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setSubject(subject)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationTime))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationTime * 1000L))
                 .signWith(secretKey, SignatureAlgorithm.HS512)
                 .compact();
     }
