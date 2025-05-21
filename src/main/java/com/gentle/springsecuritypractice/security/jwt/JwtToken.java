@@ -1,4 +1,4 @@
-package com.gentle.springsecuritypractice.common.security.jwt;
+package com.gentle.springsecuritypractice.security.jwt;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

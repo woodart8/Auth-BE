@@ -1,4 +1,4 @@
-package com.gentle.springsecuritypractice.common.config;
+package com.gentle.springsecuritypractice.redis.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

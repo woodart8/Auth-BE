@@ -1,4 +1,4 @@
-package com.gentle.springsecuritypractice.common.security.jwt;
+package com.gentle.springsecuritypractice.security.jwt;
 
 import lombok.Getter;
 import lombok.Setter;

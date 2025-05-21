@@ -1,7 +1,7 @@
 package com.gentle.springsecuritypractice.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gentle.springsecuritypractice.common.security.jwt.JwtToken;
+import com.gentle.springsecuritypractice.security.jwt.JwtToken;
 import lombok.Builder;
 import lombok.Getter;
 

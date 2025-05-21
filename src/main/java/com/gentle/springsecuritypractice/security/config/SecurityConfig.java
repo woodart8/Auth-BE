@@ -1,6 +1,6 @@
-package com.gentle.springsecuritypractice.common.config;
+package com.gentle.springsecuritypractice.security.config;
 
-import com.gentle.springsecuritypractice.common.security.jwt.JwtAuthenticationFilter;
+import com.gentle.springsecuritypractice.security.jwt.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

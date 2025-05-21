@@ -1,4 +1,4 @@
-package com.gentle.springsecuritypractice.redis;
+package com.gentle.springsecuritypractice.redis.utility;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;

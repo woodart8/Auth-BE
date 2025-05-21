@@ -1,4 +1,4 @@
-package com.gentle.springsecuritypractice.common.security.jwt;
+package com.gentle.springsecuritypractice.security.jwt;
 
 import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
