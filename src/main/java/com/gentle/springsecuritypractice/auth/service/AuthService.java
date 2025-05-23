@@ -13,6 +13,8 @@ public interface AuthService {
 
     LoginResponseDTO kakaoLogin(String accessCode);
 
+    LoginResponseDTO naverLogin(String accessCode);
+
     void logout(String token);
 
     TokenResponseDTO reissue(String refreshToken);

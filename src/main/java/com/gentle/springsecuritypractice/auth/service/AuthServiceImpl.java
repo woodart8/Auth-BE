@@ -2,6 +2,7 @@ package com.gentle.springsecuritypractice.auth.service;
 
 import com.gentle.springsecuritypractice.auth.dto.*;
 import com.gentle.springsecuritypractice.auth.utility.KakaoUtil;
+import com.gentle.springsecuritypractice.auth.utility.NaverUtil;
 import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
 import com.gentle.springsecuritypractice.security.jwt.JwtProperties;
@@ -15,6 +16,7 @@ import com.gentle.springsecuritypractice.user.entity.User;
 import com.gentle.springsecuritypractice.user.repository.UserRepository;
 import com.gentle.springsecuritypractice.auth.validator.LoginValidator;
 import com.gentle.springsecuritypractice.auth.validator.SignUpValidator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -31,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtProperties jwtProperties;
     private final RedisUtil redisUtil;
     private final KakaoUtil kakaoUtil;
+    private final NaverUtil naverUtil;
 
     @Autowired
     public AuthServiceImpl(UserRepository userRepository,
@@ -38,13 +42,15 @@ public class AuthServiceImpl implements AuthService {
                            JwtUtil jwtUtil,
                            JwtProperties jwtProperties,
                            RedisUtil redisUtil,
-                           KakaoUtil kakaoUtil) {
+                           KakaoUtil kakaoUtil,
+                           NaverUtil naverUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.jwtProperties = jwtProperties;
         this.redisUtil = redisUtil;
         this.kakaoUtil = kakaoUtil;
+        this.naverUtil = naverUtil;
     }
 
     @Override
@@ -119,6 +125,29 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public LoginResponseDTO naverLogin(String accessCode) {
+        NaverDTO.OAuthToken oAuthToken = naverUtil.requestToken(accessCode);
+        NaverDTO.NaverProfile naverProfile = naverUtil.requestProfile(oAuthToken);
+        String email = naverProfile.getEmail();
+
+        User user = userRepository.findByEmailAndSignUpPath(email, SignUpPath.NAVER)
+                .orElseGet(() -> createNewUser(naverProfile));
+
+        JwtToken jwtToken = jwtUtil.createAuthTokens(user);
+        redisUtil.setValue(
+                "refresh:" + user.getUserId(),
+                jwtToken.getRefreshToken(),
+                jwtProperties.getRefreshExpirationTime(),
+                TimeUnit.SECONDS
+        );
+
+        return LoginResponseDTO.builder()
+                .userId(user.getUserId())
+                .token(jwtToken)
+                .build();
+    }
+
+    @Override
     public void logout(String accessToken) {
         jwtUtil.validateToken(accessToken);
         String userId = jwtUtil.getSubject(accessToken);
@@ -159,6 +188,18 @@ public class AuthServiceImpl implements AuthService {
                 .email(kakaoProfile.getKakaoAccount().getEmail())
                 .userStatus(UserStatus.ACTIVE)
                 .signUpPath(SignUpPath.KAKAO)
+                .createdAt(LocalDateTime.now().withNano(0))
+                .userRole(UserRole.ENTERPRISE.name())
+                .build();
+        return userRepository.save(newUser);
+    }
+
+    private User createNewUser(NaverDTO.NaverProfile naverProfile) {
+        User newUser = User.builder()
+                .userName(naverProfile.getNickname())
+                .email(naverProfile.getEmail())
+                .userStatus(UserStatus.ACTIVE)
+                .signUpPath(SignUpPath.NAVER)
                 .createdAt(LocalDateTime.now().withNano(0))
                 .userRole(UserRole.ENTERPRISE.name())
                 .build();

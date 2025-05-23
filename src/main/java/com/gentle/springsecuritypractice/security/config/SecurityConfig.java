@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/signup").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/login/kakao").permitAll()
+                        .requestMatchers("/api/auth/login/naver").permitAll()
                         .requestMatchers("/api/auth/logout").permitAll()
                         .requestMatchers("/api/auth/reissue").permitAll()
                         .requestMatchers("/api/users/**").hasRole("ENTERPRISE")

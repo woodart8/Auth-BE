@@ -2,7 +2,7 @@ package com.gentle.springsecuritypractice.auth.utility;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gentle.springsecuritypractice.auth.dto.KakaoDTO;
+import com.gentle.springsecuritypractice.auth.dto.NaverDTO;
 import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
 import lombok.extern.slf4j.Slf4j;
@@ -18,37 +18,37 @@ import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Component
-public class KakaoUtil {
+public class NaverUtil {
 
-    @Value("${kakao.auth.client}")
+    @Value("${naver.auth.client}")
     private String client;
-    @Value("${kakao.auth.redirect}")
-    private String redirect;
+    @Value("${naver.auth.secret}")
+    private String secret;
 
-    public KakaoDTO.OAuthToken requestToken(String accessCode) {
+    public NaverDTO.OAuthToken requestToken(String accessCode) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", client);
-        params.add("redirect_url", redirect);
+        params.add("client_secret", secret);
         params.add("code", accessCode);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
-                "https://kauth.kakao.com/oauth/token",
+          "https://nid.naver.com/oauth2.0/token",
                 HttpMethod.POST,
                 request,
                 String.class);
 
         ObjectMapper objectMapper = new ObjectMapper();
 
-        KakaoDTO.OAuthToken oAuthToken;
+        NaverDTO.OAuthToken oAuthToken;
         try {
-            oAuthToken = objectMapper.readValue(response.getBody(), KakaoDTO.OAuthToken.class);
+            oAuthToken = objectMapper.readValue(response.getBody(), NaverDTO.OAuthToken.class);
         } catch (JsonProcessingException e) {
             throw new CommonException(ErrorCode.PARSE_JSON_FAILED);
         }
@@ -56,7 +56,7 @@ public class KakaoUtil {
         return oAuthToken;
     }
 
-    public KakaoDTO.KakaoProfile requestProfile(KakaoDTO.OAuthToken oAuthToken){
+    public NaverDTO.NaverProfile requestProfile(NaverDTO.OAuthToken oAuthToken) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
 
@@ -66,21 +66,20 @@ public class KakaoUtil {
         HttpEntity<MultiValueMap<String,String>> request = new HttpEntity<>(headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
-                "https://kapi.kakao.com/v2/user/me",
+                "https://openapi.naver.com/v1/nid/me",
                 HttpMethod.GET,
                 request,
                 String.class);
 
         ObjectMapper objectMapper = new ObjectMapper();
 
-        KakaoDTO.KakaoProfile kakaoProfile;
+        NaverDTO naverDTO;
         try {
-            kakaoProfile = objectMapper.readValue(response.getBody(), KakaoDTO.KakaoProfile.class);
+            naverDTO = objectMapper.readValue(response.getBody(), NaverDTO.class);
         } catch (JsonProcessingException e) {
             throw new CommonException(ErrorCode.PARSE_JSON_FAILED);
         }
 
-        return kakaoProfile;
+        return naverDTO.getResponse();
     }
-
 }

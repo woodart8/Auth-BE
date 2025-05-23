@@ -42,6 +42,13 @@ public class AuthController {
         return ResponseEntity.ok(loginResponse);
     }
 
+    // 네이버 로그인
+    @PostMapping("/auth/login/naver")
+    public ResponseEntity<?> naverLogin(@RequestParam("code") String accessCode) {
+        LoginResponseDTO loginResponse = authService.naverLogin(accessCode);
+        return ResponseEntity.ok(loginResponse);
+    }
+
     // 로그아웃
     @PostMapping("/auth/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String accessToken) {
