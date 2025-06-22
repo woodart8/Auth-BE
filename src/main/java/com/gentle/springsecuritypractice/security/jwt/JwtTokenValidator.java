@@ -1,6 +1,6 @@
 package com.gentle.springsecuritypractice.security.jwt;
 
-import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
+import com.gentle.springsecuritypractice.common.exception.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;

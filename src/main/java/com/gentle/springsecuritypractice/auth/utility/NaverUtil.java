@@ -3,7 +3,7 @@ package com.gentle.springsecuritypractice.auth.utility;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentle.springsecuritypractice.auth.dto.NaverDTO;
-import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
+import com.gentle.springsecuritypractice.common.exception.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

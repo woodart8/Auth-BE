@@ -1,6 +1,5 @@
 package com.gentle.springsecuritypractice.common.exception;
 
-import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
 import lombok.Getter;
 
 @Getter

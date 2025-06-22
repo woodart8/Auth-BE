@@ -1,6 +1,6 @@
 package com.gentle.springsecuritypractice.auth.validator;
 
-import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
+import com.gentle.springsecuritypractice.common.exception.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
 import com.gentle.springsecuritypractice.user.aggregate.SignUpPath;
 import com.gentle.springsecuritypractice.auth.dto.LoginRequestDTO;

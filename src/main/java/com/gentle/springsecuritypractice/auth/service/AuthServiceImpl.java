@@ -3,7 +3,7 @@ package com.gentle.springsecuritypractice.auth.service;
 import com.gentle.springsecuritypractice.auth.dto.*;
 import com.gentle.springsecuritypractice.auth.utility.KakaoUtil;
 import com.gentle.springsecuritypractice.auth.utility.NaverUtil;
-import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
+import com.gentle.springsecuritypractice.common.exception.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
 import com.gentle.springsecuritypractice.security.jwt.JwtProperties;
 import com.gentle.springsecuritypractice.security.jwt.JwtToken;

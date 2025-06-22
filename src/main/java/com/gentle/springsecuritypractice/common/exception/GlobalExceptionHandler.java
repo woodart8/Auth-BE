@@ -1,7 +1,5 @@
-package com.gentle.springsecuritypractice.common.advice;
+package com.gentle.springsecuritypractice.common.exception;
 
-import com.gentle.springsecuritypractice.common.exception.CommonException;
-import com.gentle.springsecuritypractice.common.response.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

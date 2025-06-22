@@ -1,4 +1,4 @@
-package com.gentle.springsecuritypractice.common.aggregate;
+package com.gentle.springsecuritypractice.common.exception;
 
 import lombok.Getter;
 

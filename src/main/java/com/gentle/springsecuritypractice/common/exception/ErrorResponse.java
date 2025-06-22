@@ -1,6 +1,5 @@
-package com.gentle.springsecuritypractice.common.response;
+package com.gentle.springsecuritypractice.common.exception;
 
-import com.gentle.springsecuritypractice.common.exception.CommonException;
 import lombok.Getter;
 
 @Getter

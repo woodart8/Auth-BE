@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix = "token")
+@ConfigurationProperties(prefix = "jwt")
 @Getter
 @Setter
 public class JwtProperties {

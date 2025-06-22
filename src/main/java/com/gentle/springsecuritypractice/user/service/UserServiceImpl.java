@@ -1,6 +1,6 @@
 package com.gentle.springsecuritypractice.user.service;
 
-import com.gentle.springsecuritypractice.common.aggregate.ErrorCode;
+import com.gentle.springsecuritypractice.common.exception.ErrorCode;
 import com.gentle.springsecuritypractice.common.exception.CommonException;
 import com.gentle.springsecuritypractice.user.dto.UserResponseDTO;
 import com.gentle.springsecuritypractice.user.entity.User;
